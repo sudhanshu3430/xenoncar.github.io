@@ -6,7 +6,12 @@ The eCommerce Website is an online platform designed to provide users with a sea
 
 ## Screenshots
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![image](https://github.com/sudhanshu3430/xenoncar.github.io/assets/127764778/97082c51-3f39-4b1e-9efc-51d3dbaf7d78)
+![image](https://github.com/sudhanshu3430/xenoncar.github.io/assets/127764778/50e68ede-fb52-4a33-b5d7-c68a34f78398)
+![image](https://github.com/sudhanshu3430/xenoncar.github.io/assets/127764778/e3303d4f-5a7b-4350-a69c-bf82016d4f37)
+
+
+
 
 
 ## Acknowledgements
