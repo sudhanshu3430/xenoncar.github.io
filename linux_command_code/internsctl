@@ -1,0 +1,17 @@
+        ;;
+    "--help" | "-h")
+        # Display help information
+        echo "Usage: internsctl [command] [subcommand] [options]"
+        # Add more detailed help information if needed
+        ;;
+    "--version")
+        # Display version information
+        echo "internsctl v0.1.0"
+        ;;
+    *)
+        echo "Error: Invalid command."
+        exit 1
+        ;;
+esac
+
+
