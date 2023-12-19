@@ -1,114 +1,137 @@
 #!/bin/bash
 
-# Function to display CPU information
-cpu_getinfo() {
-    lscpu
-}
+# Section A
 
-# Function to display memory information
-memory_getinfo() {
-    free
-}
+if [[ $1 == "--help" ]]; then
+  echo "Usage: internsctl [options]"
+  echo "Options:"
+  echo "  --help           Display this help message"
+  echo "  --version        Display the command version"
+  echo "  --man            Display the manual page"
+  echo "  --size           Diaplay the file size"
+  echo "  --permissions    Display the file permissions"
+  echo "  --owner          Display the file owner"
+  echo "  --last-modified  Display the last modified"
+  exit 0
+fi
 
-# Function to create a new user
-user_create() {
-    if [ -z "$1" ]; then
-        echo "Error: Please provide a username."
+if [[ $1 == "--version" ]]; then
+  echo "internsctl v0.1.0"
+  exit 0
+fi
+
+if [[ $1 == "--man" ]]; then
+  echo "INTERNSTL(1)                     User Commands                     INTERNSTL(1)"
+  echo ""
+  echo "NAME"
+  echo "    internsctl - Custom Linux command for operations"
+  echo ""
+  echo "SYNOPSIS"
+  echo "    internsctl [options]"
+  echo ""
+  echo "DESCRIPTION"
+  echo "    The internsctl command provides various options for performing operations."
+  echo ""
+  echo "OPTIONS"
+  echo "    --help     Display the help message and usage guidelines."
+  echo ""
+  echo "    --version  Display the command version."
+  echo ""
+  echo "    --man      Display the manual page."
+  echo ""
+  echo "EXAMPLES"
+  echo "    internsctl cpu getinfo        Get CPU information of the server."
+  echo ""
+  echo "    internsctl memory getinfo     Get memory information of the server."
+  echo ""
+  echo "    internsctl user create <username>   Create a new user on the server."
+  echo ""
+  echo "    internsctl user list          List all regular users on the server."
+  echo ""
+  echo "    internsctl user list --sudo-only    List users with sudo permissions on the server."
+  echo ""
+  echo "    internsctl file getinfo [options] <file-name>    Get information about a file."
+  echo ""
+  exit 0
+fi
+
+# Section B
+
+if [[ $1 == "cpu" && $2 == "getinfo" ]]; then
+  lscpu
+  exit 0
+fi
+
+if [[ $1 == "memory" && $2 == "getinfo" ]]; then
+  free
+  exit 0
+fi
+
+if [[ $1 == "user" && $2 == "create" ]]; then
+  if [[ -z $3 ]]; then
+    echo "Error: Username not provided. Usage: internsctl user create <username>"
+    exit 1
+  fi
+
+  # Create user
+  sudo useradd -m $3
+  sudo passwd $3
+  exit 0
+fi
+
+if [[ $1 == "user" && $2 == "list" ]]; then
+  if [[ $3 == "--sudo-only" ]]; then
+    # List users with sudo permissions
+    sudo awk -F: '$3 >= 1000 && $7 != "/usr/sbin/nologin" { print $1 }' /etc/passwd
+  else
+    # List all regular users
+    awk -F: '$3 >= 1000 && $7 != "/usr/sbin/nologin" { print $1 }' /etc/passwd
+  fi
+  exit 0
+fi
+
+if [[ $1 == "file" && $2 == "getinfo" ]]; then
+  if [[ -z $3 ]]; then
+    echo "Error: File name not provided. Usage: internsctl file getinfo [options] <file-name>"
+    exit 1
+  fi
+
+  file_info=$(stat -c "File: %n%nAccess: %A%nSize(B): %s%nOwner: %U%nModify: %y" "$3")
+
+  if [[ -n $4 ]]; then
+    case $4 in
+      --size | -s)
+        size=$(stat -c "%s" "$3")
+        echo "Size(B): $size"
+        exit 0
+        ;;
+      --permissions | -p)
+        permissions=$(stat -c "%A" "$3")
+        echo "Access: $permissions"
+        exit 0
+        ;;
+      --owner | -o)
+        owner=$(stat -c "%U" "$3")
+        echo "Owner: $owner"
+        exit 0
+        ;;
+      --last-modified | -m)
+        last_modified=$(stat -c "%y" "$3")
+        echo "Modify: $last_modified"
+        exit 0
+        ;;
+      *)
+        echo "Invalid option. Usage: internsctl file getinfo [options] <file-name>"
         exit 1
-    fi
-
-    sudo adduser "$1"
-}
-
-# Function to list regular users or sudo users
-user_list() {
-    if [ "$1" == "--sudo-only" ]; then
-        sudo getent passwd | cut -d: -f1
-    else
-        getent passwd | cut -d: -f1
-    fi
-}
-
-# Function to get file information
-file_getinfo() {
-    if [ -z "$2" ]; then
-        echo "Error: Please provide a file name."
-        exit 1
-    fi
-
-    case "$1" in
-        "--size" | "-s")
-            stat --format="%s" "$2"
-            ;;
-        "--permissions" | "-p")
-            stat --format="%A" "$2"
-            ;;
-        "--owner" | "-o")
-            stat --format="%U" "$2"
-            ;;
-        "--last-modified" | "-m")
-            stat --format="%y" "$2"
-            ;;
-        *)
-            # Default: Display comprehensive file information
-            stat "$2"
-            ;;
+        ;;
     esac
-}
+  else
+    echo "$file_info"
+    exit 0
+  fi
+fi
 
-# Main script
-case "$1" in
-    "cpu")
-        case "$2" in
-            "getinfo")
-                cpu_getinfo
-                ;;
-            *)
-                echo "Error: Invalid CPU command."
-                exit 1
-                ;;
-        esac
-        ;;
-    "memory")
-        case "$2" in
-            "getinfo")
-                memory_getinfo
-                ;;
-            *)
-                echo "Error: Invalid memory command."
-                exit 1
-                ;;
-        esac
-        ;;
-    "user")
-        case "$2" in
-            "create")
-                user_create "$3"
-                ;;
-            "list")
-                user_list "$3"
-                ;;
-            *)
-                echo "Error: Invalid user command."
-                exit 1
-                ;;
-        esac
-        ;;
-    "file")
-        shift
-        file_getinfo "$@"
-        ;;
-    "--help" | "-h")
-        # Display help information
-        echo "Usage: internsctl [command] [subcommand] [options]"
-        # Add more detailed help information if needed
-        ;;
-    "--version")
-        # Display version information
-        echo "internsctl v0.1.0"
-        ;;
-    *)
-        echo "Error: Invalid command."
-        exit 1
-        ;;
-esac
+# Invalid command or options
+
+echo "Invalid command or options. Use 'internsctl --help' for more information."
+exit 1
